@@ -1,9 +1,10 @@
 #!/bin/sh
+re="[1-9][0-9]*$"
 if [ $# -eq 2 ]
 then
-	if [ $1 -le 0 ] || [ $2 -le 0 ]
+	if ! [[ $1 =~ $re ]] || ! [[ $2 =~ $re ]]
 	then
-		echo "Input must be greater than 0"
+		echo "Invalid input number, input must be greater than 0"
 		exit 0
 	fi
 	for i in $(seq 1 $1)
@@ -17,6 +18,6 @@ then
 		echo -e $line
 	done
 else
-	echo "Invalid input"
+	echo "Invalid parameter numbers"
 	exit 0
 fi
