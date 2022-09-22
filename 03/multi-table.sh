@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 re="^[1-9][0-9]*$"
 if [ $# -eq 2 ]
 then
