@@ -93,6 +93,7 @@ modules.order
 !.mailmap
 !.config
 !.version
+!/modules.*
 
 #
 # Generated include files
