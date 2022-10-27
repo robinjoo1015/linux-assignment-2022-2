@@ -1,4 +1,3 @@
-#--------- hello_module.c ---------#
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
