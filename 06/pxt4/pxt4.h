@@ -1839,11 +1839,11 @@ PXT4_FEATURE_INCOMPAT_FUNCS(casefold,		CASEFOLD)
 					 PXT4_FEATURE_RO_COMPAT_LARGE_FILE| \
 					 PXT4_FEATURE_RO_COMPAT_BTREE_DIR)
 
-#define EXT3_FEATURE_COMPAT_SUPP	PXT4_FEATURE_COMPAT_EXT_ATTR
-#define EXT3_FEATURE_INCOMPAT_SUPP	(PXT4_FEATURE_INCOMPAT_FILETYPE| \
+#define PXT3_FEATURE_COMPAT_SUPP	PXT4_FEATURE_COMPAT_EXT_ATTR
+#define PXT3_FEATURE_INCOMPAT_SUPP	(PXT4_FEATURE_INCOMPAT_FILETYPE| \
 					 PXT4_FEATURE_INCOMPAT_RECOVER| \
 					 PXT4_FEATURE_INCOMPAT_META_BG)
-#define EXT3_FEATURE_RO_COMPAT_SUPP	(PXT4_FEATURE_RO_COMPAT_SPARSE_SUPER| \
+#define PXT3_FEATURE_RO_COMPAT_SUPP	(PXT4_FEATURE_RO_COMPAT_SPARSE_SUPER| \
 					 PXT4_FEATURE_RO_COMPAT_LARGE_FILE| \
 					 PXT4_FEATURE_RO_COMPAT_BTREE_DIR)
 
@@ -1878,17 +1878,17 @@ PXT4_FEATURE_INCOMPAT_FUNCS(casefold,		CASEFOLD)
 static inline bool pxt4_has_unknown_ext##ver##_compat_features(struct super_block *sb) \
 { \
 	return ((PXT4_SB(sb)->s_es->s_feature_compat & \
-		cpu_to_le32(~EXT##ver##_FEATURE_COMPAT_SUPP)) != 0); \
+		cpu_to_le32(~PXT##ver##_FEATURE_COMPAT_SUPP)) != 0); \
 } \
 static inline bool pxt4_has_unknown_ext##ver##_ro_compat_features(struct super_block *sb) \
 { \
 	return ((PXT4_SB(sb)->s_es->s_feature_ro_compat & \
-		cpu_to_le32(~EXT##ver##_FEATURE_RO_COMPAT_SUPP)) != 0); \
+		cpu_to_le32(~PXT##ver##_FEATURE_RO_COMPAT_SUPP)) != 0); \
 } \
 static inline bool pxt4_has_unknown_ext##ver##_incompat_features(struct super_block *sb) \
 { \
 	return ((PXT4_SB(sb)->s_es->s_feature_incompat & \
-		cpu_to_le32(~EXT##ver##_FEATURE_INCOMPAT_SUPP)) != 0); \
+		cpu_to_le32(~PXT##ver##_FEATURE_INCOMPAT_SUPP)) != 0); \
 }
 
 EXTN_FEATURE_FUNCS(2)

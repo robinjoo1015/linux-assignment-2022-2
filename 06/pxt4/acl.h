@@ -52,7 +52,7 @@ static inline int pxt4_acl_count(size_t size)
 	}
 }
 
-#ifdef CONFIG_PXT4_FS_POSIX_ACL
+#ifdef CONFIG_EXT4_FS_POSIX_ACL
 
 /* acl.c */
 struct posix_acl *pxt4_get_acl(struct inode *inode, int type);

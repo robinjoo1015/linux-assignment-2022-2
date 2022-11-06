@@ -2966,7 +2966,7 @@ static unsigned long pxt4_get_stripe_size(struct pxt4_sb_info *sbi)
  */
 static int pxt4_feature_set_ok(struct super_block *sb, int readonly)
 {
-	if (pxt4_has_unknown_pxt4_incompat_features(sb)) {
+	if (pxt4_has_unknown_ext4_incompat_features(sb)) {
 		pxt4_msg(sb, KERN_ERR,
 			"Couldn't mount because of "
 			"unsupported optional features (%x)",
@@ -2994,7 +2994,7 @@ static int pxt4_feature_set_ok(struct super_block *sb, int readonly)
 	}
 
 	/* Check that feature set is OK for a read-write mount */
-	if (pxt4_has_unknown_pxt4_ro_compat_features(sb)) {
+	if (pxt4_has_unknown_ext4_ro_compat_features(sb)) {
 		pxt4_msg(sb, KERN_ERR, "couldn't mount RDWR because of "
 			 "unsupported optional features (%x)",
 			 (le32_to_cpu(PXT4_SB(sb)->s_es->s_feature_ro_compat) &

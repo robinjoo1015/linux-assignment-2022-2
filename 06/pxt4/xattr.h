@@ -205,7 +205,7 @@ extern int pxt4_xattr_ibody_inline_set(handle_t *handle, struct inode *inode,
 extern struct mb_cache *pxt4_xattr_create_cache(void);
 extern void pxt4_xattr_destroy_cache(struct mb_cache *);
 
-#ifdef CONFIG_PXT4_FS_SECURITY
+#ifdef CONFIG_EXT4_FS_SECURITY
 extern int pxt4_init_security(handle_t *handle, struct inode *inode,
 			      struct inode *dir, const struct qstr *qstr);
 #else
