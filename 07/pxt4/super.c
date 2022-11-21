@@ -6372,16 +6372,16 @@ static const char * seperate_num(unsigned long long number, char buffer[])
 	return buffer;
 }
 
-extern unsigned long long total_time;
+extern unsigned long long file_write_iter_time;
 
 static void printout(int depth, char *func_name, unsigned long long count, unsigned long long time)
 {
 	char char_buff[100];
 	int percentage;
 	
-	if (!total_time)
-		total_time = 1;
-	percentage = time * 100 / total_time;
+	if (!file_write_iter_time)
+		file_write_iter_time = 1;
+	percentage = time * 100 / file_write_iter_time;
 	
 	printk("%s", "");
 	

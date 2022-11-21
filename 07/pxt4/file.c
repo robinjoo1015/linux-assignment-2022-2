@@ -512,6 +512,21 @@ loff_t pxt4_llseek(struct file *file, loff_t offset, int whence)
 	return vfs_setpos(file, offset, maxbytes);
 }
 
+unsigned long long file_write_iter_time, file_write_iter_count;
+
+static ssize_t pxt4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+{
+	ssize_t ret;
+	struct timespec myclock[2];
+	
+	getrawmonotonic(&myclock[0]);
+	ret = pxt4_file_write_iter_internal(iocb, from);
+	getrawmonotonic(&myclock[1]);
+	calclock(myclock, &file_write_iter_time, &file_write_iter_count);
+	
+	return ret;
+}
+
 const struct file_operations pxt4_file_operations = {
 	.llseek		= pxt4_llseek,
 	.read_iter	= pxt4_file_read_iter,
@@ -540,17 +555,3 @@ const struct inode_operations pxt4_file_inode_operations = {
 	.fiemap		= pxt4_fiemap,
 };
 
-unsigned long long file_write_iter_time, file_write_iter_count;
-
-static ssize_t pxt4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-{
-	ssize_t ret;
-	struct timespec myclock[2];
-	
-	getrawmonotonic(&myclock[0]);
-	ret = pxt4_file_write_iter_internal(iocb, from);
-	getrawmonotonic(&myclock[1]);
-	calclock(myclock, &file_write_iter_time, &file_write_iter_count);
-	
-	return ret;
-}
