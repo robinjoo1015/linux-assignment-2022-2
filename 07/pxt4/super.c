@@ -6334,6 +6334,67 @@ out7:
 	return err;
 }
 
+/**
+ * separate_num() - Make number separated with commas.
+ * @number: Input number.
+ * @buffer: Number string buffer.
+ *
+ * Return: Separated number string buffer itself.
+**/
+static const char * seperate_num(unsigned long long number, char buffer[])
+{
+	char tmp_buff[100]; // temp buffer for characterized numbers
+	char tmp_reverse_buff[100]; // temp buffer for saving reversed numbers
+	int cur, counter = 0, rvs_cur = 0;
+	
+	sprintf(tmp_buff, "%llu", number);
+	cur = strlen(tmp_buff);
+	
+	for (--cur; cur > -1; cur--) {
+		if (counter == 3) {
+			tmp_reverse_buff[rvs_cur++] = ',';
+			counter = 0;
+			cur++;
+		}
+		else {
+			tmp_reverse_buff[rvs_cur++] = tmp_buff[cur];
+			counter++;
+		}
+	}
+	
+	cur = 0;
+	for (--rvs_cur; rvs_cur > -1; rvs_cur--) {
+		buffer[cur++] = tmp_reverse_buff[rvs_cur];
+	}
+	
+	buffer[cur] = '\0'; // inserting null char, EOL
+	
+	return buffer;
+}
+
+extern unsigned long long total_time;
+
+static void printout(int depth, char *func_name, unsigned long long count, unsigned long long time)
+{
+	char char_buff[100];
+	int percentage;
+	
+	if (!total_time)
+		total_time = 1;
+	percentage = time * 100 / total_time;
+	
+	printk("%s", "");
+	
+	while(depth--)
+		printk(KERN_CONT "\t");
+	printk(KERN_CONT "%s is called ", func_name);
+	printk(KERN_CONT "%s times, ", seperate_num(count, char_buff));
+	printk(KERN_CONT "time interval %s ns", seperate_num(time, char_buff));
+	printk(KERN_CONT " (%d%%)\n", percentage);
+}
+
+extern unsigned long long file_write_iter_time, file_write_iter_count;
+
 static void __exit pxt4_exit_fs(void)
 {
 	pxt4_destroy_lazyinit_thread();
@@ -6348,10 +6409,13 @@ static void __exit pxt4_exit_fs(void)
 	pxt4_exit_post_read_processing();
 	pxt4_exit_es();
 	pxt4_exit_pending();
+	
+	// printk("pxt4_file_write_iter is called %llu times and the time interval is %llu ns\n", file_write_iter_count, file_write_iter_time);
+	printout(1, "file_write_iter", file_write_iter_count, file_write_iter_time);
 }
 
-MODULE_AUTHOR("Remy Card, Stephen Tweedie, Andrew Morton, Andreas Dilger, Theodore Ts'o and others");
-MODULE_DESCRIPTION("Fourth Extended Filesystem");
+MODULE_AUTHOR("***YoungSeok Joo***, Remy Card, Stephen Tweedie, Andrew Morton, Andreas Dilger, Theodore Ts'o and others");
+MODULE_DESCRIPTION("Fourth Extended Filesystem modified by *** YoungSeok Joo (20184757) ***");
 MODULE_LICENSE("GPL");
 MODULE_SOFTDEP("pre: crc32c");
 module_init(pxt4_init_fs)
