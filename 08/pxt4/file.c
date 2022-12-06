@@ -523,6 +523,7 @@ static ssize_t pxt4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	ret = pxt4_file_write_iter_internal(iocb, from);
 	getrawmonotonic(&myclock[1]);
 	calclock(myclock, &file_write_iter_time, &file_write_iter_count);
+	printk("cpu[%d] called pxt4_file_write_iter()\n", current->cpu);
 	
 	return ret;
 }
