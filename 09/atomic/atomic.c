@@ -33,7 +33,7 @@ static int test_and_set(void *data)
 		counter += 1;
 		__sync_lock_release(&lock);
 		
-		prinkt(KERN_INFO "pid[%u] %s: counter: %d\n", current->pid, __func__, counter);
+		printk(KERN_INFO "pid[%u] %s: counter: %d\n", current->pid, __func__, counter);
 		msleep(500);
 	}
 	
@@ -49,7 +49,7 @@ static int compare_and_swap(void *data)
 		counter += 1;
 		lock = 0;
 		
-		prinkt(KERN_INFO "pid[%u] %s: counter: %d\n", current->pid, __func__, counter);
+		printk(KERN_INFO "pid[%u] %s: counter: %d\n", current->pid, __func__, counter);
 		msleep(500);
 	}
 	
