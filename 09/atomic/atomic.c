@@ -6,7 +6,7 @@
 
 #define KTHREAD_COUNT 4
 
-struct task_struct* kthreads[KTHREAD_COUNT]
+struct task_struct* kthreads[KTHREAD_COUNT];
 
 int counter = 0;
 int lock = 0;
