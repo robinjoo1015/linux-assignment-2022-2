@@ -58,7 +58,7 @@ static int compare_and_swap(void *data)
 
 static int __init atomic_operation_init(void)
 {
-	printk(KERN_INFO "%s: Entering atomic operations module!", __func__);
+	printk(KERN_INFO "%s: Entering atomic operations module!\n", __func__);
 	kthreads[0] = kthread_run(fetch_and_add, NULL, "fetch and add");
 	kthreads[1] = kthread_run(test_and_set, NULL, "test and set");
 	kthreads[2] = kthread_run(compare_and_swap, NULL, "compare and swap");
@@ -74,7 +74,7 @@ static void __exit atomic_operation_exit(void)
 	kthread_stop(kthreads[2]);
 	kthread_stop(kthreads[3]);
 	
-	printk(KERN_INFO "%s: Exiting atomic operations module!", __func__);
+	printk(KERN_INFO "%s: Exiting atomic operations module!\n", __func__);
 }
 
 module_init(atomic_operation_init);
