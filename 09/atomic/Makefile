@@ -1,4 +1,4 @@
-obj-m 		:= atomic.o
+obj-m 		:= fetch_and_add.o test_and_set.o compare_and_swap.o
 
 KERNEL_DIR 	:= /lib/modules/$(shell uname -r)/build
 PWD 		:= $(shell pwd)
