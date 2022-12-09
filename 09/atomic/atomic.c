@@ -69,11 +69,12 @@ static int __init atomic_operation_init(void)
 
 static void __exit atomic_operation_exit(void)
 {
-	printk(KERN_INFO "%s: Exiting atomic operations module!", __func__);
 	kthread_stop(kthreads[0]);
 	kthread_stop(kthreads[1]);
 	kthread_stop(kthreads[2]);
 	kthread_stop(kthreads[3]);
+	
+	printk(KERN_INFO "%s: Exiting atomic operations module!", __func__);
 }
 
 module_init(atomic_operation_init);
