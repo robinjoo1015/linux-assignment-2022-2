@@ -1,0 +1,187 @@
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/slab.h>
+#include <linux/spinlock.h>
+#include <linux/kthread.h>
+#include <linux/sched.h>
+#include <linux/delay.h>
+#include <linux/list.h>
+#include <linux/time.h>
+#include "./calclock.h"
+
+#define BILLION 1000000000
+#define MILLION 1000000
+#define THREAD_RANGE 250000
+#define KTHREAD_COUNT 4
+
+int counter;
+spinlock_t counter_lock;
+struct timespec spclock[2];
+struct task_struct* kthreads[KTHREAD_COUNT];
+unsigned long long delay_list[3];
+
+struct my_node {
+	struct list_head list;
+	int data;
+};
+
+struct list_head my_list;
+
+unsigned long long calclock(struct timespec *spclock);
+
+void add_to_list(int thread_id, int range_bound[])
+{
+	int num = range_bound[0];
+	printk(KERN_INFO "thread #%d range: %d ~ %d\n", thread_id, range_bound[0], range_bound[1]);
+	
+	while(num<=range_bound[1]) {
+		struct my_node *new = kmalloc(sizeof(struct my_node), GFP_KERNEL);
+		spin_lock(&counter_lock);
+		printk("add %d->%d\n", thread_id, num);
+		new->data = num;
+		list_add(&new->list, &my_list);
+		num++;
+		counter++;
+		if(counter==MILLION) {
+			printk("counter 1million!\n");
+			getnstimeofday(&spclock[1]);
+			delay_list[0] = calclock(spclock);
+			getnstimeofday(&spclock[0]);
+		}
+		spin_unlock(&counter_lock);
+	}
+	
+	while(counter<MILLION) {
+		msleep(1000);
+	}
+	
+	return;
+}
+
+int search_list(int thread_id, int range_bound[])
+{
+	struct my_node *cur;
+	int num = range_bound[0];
+	
+	while(num<=range_bound[1]) {
+		spin_lock(&counter_lock);
+		printk("search %d->%d\n", thread_id, num);
+		cur = list_first_entry(&my_list, struct my_node, list);
+		while(cur->data != num) {
+			cur = list_next_entry(cur, list);
+		}
+		num++;
+		counter++;
+		if(counter==2*MILLION) {
+			printk("counter 2million!\n");
+			getnstimeofday(&spclock[1]);
+			delay_list[1] = calclock(spclock);
+			getnstimeofday(&spclock[0]);
+		}
+		spin_unlock(&counter_lock);
+	}
+	
+	printk(KERN_INFO "thread #%d searched range: %d ~ %d\n", thread_id, range_bound[0], range_bound[1]);
+	while(counter<2*MILLION) {
+		msleep(1000);
+	}
+	return 0;
+}
+
+int delete_from_list(int thread_id, int range_bound[])
+{
+	struct my_node *cur, *tmp;
+	int num = range_bound[0];
+	
+	while(num<=range_bound[1]) {
+		spin_lock(&counter_lock);
+		printk("delete %d->%d\n", thread_id, num);
+		cur = list_first_entry(&my_list, struct my_node, list);
+		while(cur->data != num) {
+			cur = list_next_entry(cur, list);
+		}
+		tmp = cur;
+		cur = list_next_entry(tmp, list);
+		list_del(&tmp->list);
+		kfree(tmp);
+		num++;
+		counter++;
+		if(counter==3*MILLION) {
+			printk("counter 3million!\n");
+			getnstimeofday(&spclock[1]);
+			delay_list[2] = calclock(spclock);
+			//getnstimeofday(&spclock[0]);
+		}
+		spin_unlock(&counter_lock);
+	}
+	printk(KERN_INFO "thread #%d deleted range: %d ~ %d\n", thread_id, range_bound[0], range_bound[1]);
+	return 0;
+}
+
+static int linked_list_function(void *data) {
+	int thread;
+	int range_bound[2];
+	thread = *((int *) data);
+	range_bound[0] = (thread-1)*THREAD_RANGE;
+	range_bound[1] = thread*THREAD_RANGE-1; 
+	add_to_list(thread, range_bound);
+	printk("thread #%d addtolist\n", thread);
+	search_list(thread, range_bound);
+	printk("thread #%d searchlist\n", thread);
+	delete_from_list(thread, range_bound);
+	printk("thread #%d deletefromlist\n", thread);
+	do_exit(0);
+}
+
+static int __init spinlock_module_init(void) {
+	static const int thread[4] = {1, 2, 3, 4};
+
+	printk(KERN_INFO "%s, Entering Spinlock Module!\n", __func__);
+	
+	counter = 0;
+	INIT_LIST_HEAD(&my_list);
+	
+	spin_lock_init(&counter_lock);
+	getnstimeofday(&spclock[0]);
+	kthreads[0] = kthread_run(linked_list_function, (void*)(thread+0), "thread1");
+    	kthreads[1] = kthread_run(linked_list_function, (void*)(thread+1), "thread2");
+    	kthreads[2] = kthread_run(linked_list_function, (void*)(thread+2), "thread3");
+    	kthreads[3] = kthread_run(linked_list_function, (void*)(thread+3), "thread4");
+	
+	return 0;
+}
+
+static void __exit spinlock_module_exit(void) {
+	printk(KERN_INFO "%s: Spinlock linked list insert time: %lld ns, count: %d\n", __func__, delay_list[0], MILLION);
+	printk(KERN_INFO "%s: Spinlock linked list search time: %lld ns, count: %d\n", __func__, delay_list[1], MILLION);
+	printk(KERN_INFO "%s: Spinlock linked list delete time: %lld ns, count: %d\n", __func__, delay_list[2], MILLION);
+	printk("thread #1 stopped!\n");
+	printk("thread #2 stopped!\n");
+	printk("thread #3 stopped!\n");
+	printk("thread #4 stopped!\n");
+	printk(KERN_INFO "%s, Exiting Spinlock Module\n", __func__);
+}
+
+module_init(spinlock_module_init);
+module_exit(spinlock_module_exit);
+
+MODULE_LICENSE("GPL");
+
+
+unsigned long long calclock(struct timespec *spclock) {
+    long temp, temp_n;
+    unsigned long long timedelay = 0;
+
+    if (spclock[1].tv_nsec >= spclock[0].tv_nsec) {
+        temp = spclock[1].tv_sec - spclock[0].tv_sec;
+        temp_n = spclock[1].tv_nsec - spclock[0].tv_nsec;
+        timedelay = BILLION * temp + temp_n;
+    } else {
+        temp = spclock[1].tv_sec - spclock[0].tv_sec + 1;
+        temp_n = BILLION + spclock[1].tv_nsec - spclock[0].tv_nsec;
+        timedelay = BILLION * temp + temp_n;
+    }
+
+    return timedelay;
+}
