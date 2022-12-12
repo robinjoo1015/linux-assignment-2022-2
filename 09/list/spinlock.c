@@ -8,9 +8,8 @@
 #include <linux/delay.h>
 #include <linux/list.h>
 #include <linux/time.h>
-#include "./calclock.h"
 
-#define BILLION 1000000000
+#define BILLION 1000000000UL
 #define MILLION 1000000
 #define THREAD_RANGE 250000
 #define KTHREAD_COUNT 4
@@ -25,7 +24,6 @@ struct my_node {
 	struct list_head list;
 	int data;
 };
-
 struct list_head my_list;
 
 unsigned long long calclock(struct timespec *spclock);
@@ -34,28 +32,24 @@ void add_to_list(int thread_id, int range_bound[])
 {
 	int num = range_bound[0];
 	printk(KERN_INFO "thread #%d range: %d ~ %d\n", thread_id, range_bound[0], range_bound[1]);
-	
 	while(num<=range_bound[1]) {
 		struct my_node *new = kmalloc(sizeof(struct my_node), GFP_KERNEL);
 		spin_lock(&counter_lock);
-		printk("add %d->%d\n", thread_id, num);
 		new->data = num;
 		list_add(&new->list, &my_list);
 		num++;
 		counter++;
 		if(counter==MILLION) {
-			printk("counter 1million!\n");
 			getnstimeofday(&spclock[1]);
 			delay_list[0] = calclock(spclock);
 			getnstimeofday(&spclock[0]);
 		}
 		spin_unlock(&counter_lock);
 	}
-	
 	while(counter<MILLION) {
-		msleep(1000);
+		msleep(1);
+		continue;
 	}
-	
 	return;
 }
 
@@ -63,10 +57,8 @@ int search_list(int thread_id, int range_bound[])
 {
 	struct my_node *cur;
 	int num = range_bound[0];
-	
 	while(num<=range_bound[1]) {
 		spin_lock(&counter_lock);
-		printk("search %d->%d\n", thread_id, num);
 		cur = list_first_entry(&my_list, struct my_node, list);
 		while(cur->data != num) {
 			cur = list_next_entry(cur, list);
@@ -74,17 +66,16 @@ int search_list(int thread_id, int range_bound[])
 		num++;
 		counter++;
 		if(counter==2*MILLION) {
-			printk("counter 2million!\n");
 			getnstimeofday(&spclock[1]);
 			delay_list[1] = calclock(spclock);
 			getnstimeofday(&spclock[0]);
 		}
 		spin_unlock(&counter_lock);
 	}
-	
 	printk(KERN_INFO "thread #%d searched range: %d ~ %d\n", thread_id, range_bound[0], range_bound[1]);
 	while(counter<2*MILLION) {
-		msleep(1000);
+		msleep(1);
+		continue;
 	}
 	return 0;
 }
@@ -93,10 +84,8 @@ int delete_from_list(int thread_id, int range_bound[])
 {
 	struct my_node *cur, *tmp;
 	int num = range_bound[0];
-	
 	while(num<=range_bound[1]) {
 		spin_lock(&counter_lock);
-		printk("delete %d->%d\n", thread_id, num);
 		cur = list_first_entry(&my_list, struct my_node, list);
 		while(cur->data != num) {
 			cur = list_next_entry(cur, list);
@@ -108,10 +97,8 @@ int delete_from_list(int thread_id, int range_bound[])
 		num++;
 		counter++;
 		if(counter==3*MILLION) {
-			printk("counter 3million!\n");
 			getnstimeofday(&spclock[1]);
 			delay_list[2] = calclock(spclock);
-			//getnstimeofday(&spclock[0]);
 		}
 		spin_unlock(&counter_lock);
 	}
@@ -136,19 +123,15 @@ static int linked_list_function(void *data) {
 
 static int __init spinlock_module_init(void) {
 	static const int thread[4] = {1, 2, 3, 4};
-
 	printk(KERN_INFO "%s, Entering Spinlock Module!\n", __func__);
-	
 	counter = 0;
 	INIT_LIST_HEAD(&my_list);
-	
 	spin_lock_init(&counter_lock);
 	getnstimeofday(&spclock[0]);
 	kthreads[0] = kthread_run(linked_list_function, (void*)(thread+0), "thread1");
     	kthreads[1] = kthread_run(linked_list_function, (void*)(thread+1), "thread2");
     	kthreads[2] = kthread_run(linked_list_function, (void*)(thread+2), "thread3");
     	kthreads[3] = kthread_run(linked_list_function, (void*)(thread+3), "thread4");
-	
 	return 0;
 }
 
@@ -165,23 +148,19 @@ static void __exit spinlock_module_exit(void) {
 
 module_init(spinlock_module_init);
 module_exit(spinlock_module_exit);
-
 MODULE_LICENSE("GPL");
 
-
-unsigned long long calclock(struct timespec *spclock) {
-    long temp, temp_n;
-    unsigned long long timedelay = 0;
-
-    if (spclock[1].tv_nsec >= spclock[0].tv_nsec) {
-        temp = spclock[1].tv_sec - spclock[0].tv_sec;
-        temp_n = spclock[1].tv_nsec - spclock[0].tv_nsec;
-        timedelay = BILLION * temp + temp_n;
-    } else {
-        temp = spclock[1].tv_sec - spclock[0].tv_sec + 1;
-        temp_n = BILLION + spclock[1].tv_nsec - spclock[0].tv_nsec;
-        timedelay = BILLION * temp + temp_n;
-    }
-
-    return timedelay;
+unsigned long long calclock(struct timespec *spclock)
+{
+	unsigned long long temp, temp_n, timedelay = 0;
+	if(spclock[1].tv_nsec >= spclock[0].tv_nsec) {
+		temp = spclock[1].tv_sec - spclock[0].tv_sec;
+		temp_n = spclock[1].tv_nsec - spclock[0].tv_nsec;
+		timedelay = BILLION * temp + temp_n;
+	} else {
+		temp = spclock[1].tv_sec - spclock[0].tv_sec + 1;
+		temp_n = BILLION + spclock[1].tv_nsec - spclock[0].tv_nsec;
+		timedelay = BILLION * temp + temp_n;
+	}
+	return timedelay;
 }
