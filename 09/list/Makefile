@@ -1,4 +1,4 @@
-obj-m := spinlock.o
+obj-m := spinlock.o mutex.o semaphore.o
 
 KERNEL_DIR	:= /lib/modules/$(shell uname -r)/build
 PWD		:= $(shell pwd)
